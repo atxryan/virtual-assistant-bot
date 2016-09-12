@@ -69,7 +69,7 @@ bot.dialog('/compliance', [
 ]);
 bot.dialog('/officehours', [
     function (session, args) {
-        builder.Prompts.text(session, "You asked about Azure Compliance. Is that correct?");
+        builder.Prompts.text(session, "You asked about Office Hours. Is that correct?");
     },
     confirmIntent
 ]);
