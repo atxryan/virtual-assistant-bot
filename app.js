@@ -1,6 +1,8 @@
 var restify = require('restify'),
     builder = require('botbuilder'),
-    nconf   = require('nconf');
+    nconf   = require('nconf'),
+    http = require('http'),
+    request = require('request');
 
 // Create nconf environment to load keys and connections strings
 // which should not end up on GitHub
@@ -69,9 +71,78 @@ bot.dialog('/compliance', [
 ]);
 bot.dialog('/officehours', [
     function (session, args) {
-        builder.Prompts.text(session, "You asked about Azure Compliance. Is that correct?");
+        builder.Prompts.text(session, "You asked about Office Hours. Is that correct?");
     },
-    confirmIntent
+    //confirmIntent,
+    function (session, results, args) {
+        if (results.response.toLowerCase() == 'y' || results.response.toLowerCase() == 'yes') {
+            // Get subjects
+            console.log("Getting subjects...");
+            request.get({
+                url: 'https://startupcalendarhelper.azurewebsites.net/api/OfficeHoursTopics?code=rrzp8pog8s4saixykuyslnrlvmo9f2jzl3x1'
+            }, function(error, response, body){
+                if(error) {
+                    console.log(error);
+                } else {
+                    result = JSON.parse(body);
+                    resultTopics = result;
+                    console.log(response.statusCode, resultTopics);
+                    builder.Prompts.choice(session, "What topic would you like to meet about?", resultTopics);
+                }
+            });
+        } else {
+            session.endDialog("Darn. Ok, I've logged this for review.");
+        }
+    }, function (session, results, next) {
+        // TODO: check of response is in topics array
+        if(results.response) {
+            session.dialogData.officeHoursTopic = results.response.entity;
+            builder.Prompts.choice(session, "When would you like to schedule your office hour?", ["Morning", "Afternoon"]);
+        } else {
+
+        }
+    }, function (session, results, next) {
+        // TODO: check of response is morning or afternoon
+        if(results.response) {
+            session.dialogData.officeHoursTime = results.response.entity;
+            var firstName = session.userData.name.split(" ")[0];
+            var lastName = session.userData.name.split(" ")[1];
+
+            console.log("Making meeting request...");
+
+            // TODO: check for required information (topic, first/last name, email, time)
+            // TODO: fill in first name, last name and email
+            var requestData = {
+                "Topic": session.dialogData.officeHoursTopic,
+                "ReqestorFirstName": "Anthony" , //session.userData.firstName
+                "ReqestorLastName": "Kelani", //session.userData.lastName
+                "ReqestorEmailAddress": "akelani@gmail.com", //session.userData.email
+                "RequestedConversation": "Office Hours Request",
+                "RequestedDayHalf": session.dialogData.officeHoursTime,
+                "IsTest": "true"
+            };
+
+            console.log(requestData);
+
+            // Request meeting
+            request.post({
+                headers: {'content-type' : 'application/json'},
+                url: 'https://startupcalendarhelper.azurewebsites.net/api/RequestTopicExpert?code=6yy62ob12opbsym3ombgkeudrq0dcws1fk04',
+                json: true,
+                body: requestData,
+            }, function(error, response, body){
+                if(error) {
+                    console.log(error);
+                } else {
+                    session.endDialog("Thanks! You should receive an email to schedule your office hours.");
+                    result = body;
+                    console.log(response.statusCode, result);
+                }
+            });
+        } else {
+
+        }
+    }
 ]);
 bot.dialog('/support', [
     function (session, args) {
