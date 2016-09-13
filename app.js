@@ -154,26 +154,33 @@ bot.dialog('/support', [
 ]);
 bot.dialog('/documentation', [
     function (session, args) {
-        builder.Prompts.text(session, "You asked about Documentation. Is that correct?");
+        session.send("You asked about Documentation.");
+        builder.Prompts.choice(session, "Which OS?", ["Windows", "Linux"]);
     },
-    confirmIntent,
-    function (session, args) {
-        console.log("call to https://directline.botframework.com/api/conversations");
+    //confirmIntent,
+    function (session, results) {
+        // console.log("call to https://directline.botframework.com/api/conversations");
 
-        var options = {
-            url: 'https://directline.botframework.com/api/conversations',
-            headers: {
-                'Authorization': 'BotConnector cV1SPT2QGuk.cwA.6aE.pI-bagzUkd5e6qMwaVRmUncdWmXxuqXQl5vmoRWpXrE'
-            }
-        };
-        request.post(
-            options, 
-            function (error, response, body) {
-                if (!error && response.statusCode == 200) {
-                    console.log(body)
-                }
-            }
-        );
+        // var options = {
+        //     url: 'https://directline.botframework.com/api/conversations',
+        //     headers: {
+        //         'Authorization': 'BotConnector cV1SPT2QGuk.cwA.6aE.pI-bagzUkd5e6qMwaVRmUncdWmXxuqXQl5vmoRWpXrE'
+        //     }
+        // };
+        // request.post(
+        //     options, 
+        //     function (error, response, body) {
+        //         if (!error && response.statusCode == 200) {
+        //             console.log(body)
+        //         }
+        //     }
+        // );
+
+
+        // Fake it!
+        var baseUrl = 'https://azure.microsoft.com/en-us/documentation/services/virtual-machines/'
+        session.send("Here's how to get started with %s virtual machines: " + baseUrl + "%s/", results.response.entity, results.response.entity);
+
     }
 ]);
 bot.dialog('/profile', [
