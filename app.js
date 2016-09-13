@@ -181,6 +181,7 @@ bot.dialog('/documentation', [
         var baseUrl = 'https://azure.microsoft.com/en-us/documentation/services/virtual-machines/'
         session.send("Here's how to get started with %s virtual machines: " + baseUrl + "%s/", results.response.entity, results.response.entity);
 
+        session.endDialog();
     }
 ]);
 bot.dialog('/profile', [
@@ -204,11 +205,21 @@ bot.dialog('/profile', [
         session.userData.languageChoice = results.response;
         builder.Prompts.choice(session, "What data store do you primarily use?", ["SQL Database", "Postgres", "MySQL", "Oracle", "MongoDB"]);
     },
+    // TODO remove this later
     function (session, results) {
-        session.userData.databaseChoice = results.response.entity;
+        session.userData.databaseChoice = results.response;
+        builder.Prompts.text(session, "What do you like to do for fun?");
+    },
+    function(session, args) {
+        builder.Prompts.confirm(session, "Really!?! Do you also like donuts? :-)");
+    },
+    function(session, args) {
+        builder.Prompts.text(session, "Nice. I have someone who'd REALLY like to meet you.");
+    },
+    function (session, results) {
         session.send("Got it... " + session.userData.name + 
                      " your startup is " + session.userData.startup + 
-                     " and you're currently using " + session.userData.language + ".");
+                     " and you're currently using " + session.userData.languageChoice + ".");
 
         session.endDialog();
     }
@@ -223,7 +234,7 @@ bot.dialog('/introductions', [
     function (session, args) {
         console.log("Wants an introduction!");
 
-        session.text("I've logged this request and someone from the US Startups team will get back to you!");
+        session.send("I've logged this request and someone from the US Startups team will get back to you!");
 
         var requestData = {
                 "Name": "Hooli",
@@ -246,6 +257,7 @@ bot.dialog('/introductions', [
                 }
             }
         );
+        session.endDialog();
     }
 ]);
 bot.dialog('/rude', function (session, args) {
@@ -273,14 +285,14 @@ bot.dialog('/firstRun', [
         }
     },
     function (session) {
-        session.endDialog("Ask me a startup question and I'll try to correctly map it to an intent."); 
+        session.endDialog("Ask me a  question and I'll try to help."); 
     }
 ]);
 
 function confirmIntent (session, results) {
     console.log("confirmation attempt")
     if (results.response.toLowerCase() == 'y' || results.response.toLowerCase() == 'yes') {
-        builder.Prompts.text("Ok, I'm getting the hang of things.");
+        session.endDialog("Ok, I'm getting the hang of things.");
     } else {
         session.endDialog("Darn. Ok, I've logged this for review.");
     }          
