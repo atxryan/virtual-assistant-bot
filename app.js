@@ -61,6 +61,8 @@ intents
     .matches('OfficeHours', '/officehours')
     .matches('SupportRequest', '/support')
     .matches('Documentation', '/documentation')
+    .matches('BizSpark', '/bizspark')
+    .matches('Introduction', '/introductions')
     .matches('Rude', '/rude')
     .onDefault('/didnotunderstand');
 
@@ -166,6 +168,10 @@ bot.dialog('/profile', [
         builder.Prompts.text(session, "Hi " + results.response + ", What's the name of your startup?"); 
     },
     function (session, results) {
+        session.userData.email = results.response;
+        builder.Prompts.text(session, "What is your email address?"); 
+    },
+    function (session, results) {
         session.userData.startup = results.response;
         builder.Prompts.choice(session, "What's your primary coding language?", [".NET", "Node.js", "Ruby on Rails", "PHP", "Java"]);
     },
@@ -181,6 +187,18 @@ bot.dialog('/profile', [
 
         session.endDialog();
     }
+]);
+bot.dialog('/bizspark', [
+    function (session, args) {
+        builder.Prompts.text(session, "You asked about BizSpark. Is that correct?");
+    },
+    confirmIntent
+]);
+bot.dialog('/introductions', [
+    function (session, args) {
+        builder.Prompts.text(session, "You asked about being introduced to someone. Is that correct?");
+    },
+    confirmIntent
 ]);
 bot.dialog('/rude', function (session, args) {
     session.endDialog("Well, you're just being rude.");
