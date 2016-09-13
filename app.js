@@ -56,6 +56,9 @@ intents
     .matches(/^help/i, function (session) {
         session.send("You asked for help.");
     })
+    .matches(/^\/profile/i, function (session) {
+        session.beginDialog('/profile');
+    })
     //LUIS intent matches
     .matches('AzureCompliance', '/compliance')
     .matches('OfficeHours', '/officehours')
@@ -115,10 +118,10 @@ bot.dialog('/officehours', [
                 "Topic": session.dialogData.officeHoursTopic,
                 "ReqestorFirstName": firstName,
                 "ReqestorLastName": lastName,
-                "ReqestorEmailAddress": "akelani@gmail.com",
+                "ReqestorEmailAddress": session.userData.email,
                 "RequestedConversation": session.dialogData.officeHoursTopic,
                 "RequestedDayHalf": session.dialogData.officeHoursTime,
-                "IsTest": "true"
+                "IsTest": "false"
             };
 
             console.log(requestData);
@@ -155,7 +158,22 @@ bot.dialog('/documentation', [
     },
     confirmIntent,
     function (session, args) {
-        // call to https://directline.botframework.com/api/conversations
+        console.log("call to https://directline.botframework.com/api/conversations");
+
+        var options = {
+            url: 'https://directline.botframework.com/api/conversations',
+            headers: {
+                'Authorization': 'BotConnector cV1SPT2QGuk.cwA.6aE.pI-bagzUkd5e6qMwaVRmUncdWmXxuqXQl5vmoRWpXrE'
+            }
+        };
+        request.post(
+            options, 
+            function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    console.log(body)
+                }
+            }
+        );
     }
 ]);
 bot.dialog('/profile', [
@@ -168,21 +186,21 @@ bot.dialog('/profile', [
         builder.Prompts.text(session, "Hi " + results.response + ", What's the name of your startup?"); 
     },
     function (session, results) {
-        session.userData.email = results.response;
+        session.userData.startup = results.response;
         builder.Prompts.text(session, "What is your email address?"); 
     },
     function (session, results) {
-        session.userData.startup = results.response;
+        session.userData.email = results.response;
         builder.Prompts.choice(session, "What's your primary coding language?", [".NET", "Node.js", "Ruby on Rails", "PHP", "Java"]);
     },
     function (session, results) {
-        session.userData.startup = results.response;
+        session.userData.languageChoice = results.response;
         builder.Prompts.choice(session, "What data store do you primarily use?", ["SQL Database", "Postgres", "MySQL", "Oracle", "MongoDB"]);
     },
     function (session, results) {
-        session.userData.language = results.response.entity;
+        session.userData.databaseChoice = results.response.entity;
         session.send("Got it... " + session.userData.name + 
-                     " you're startup is " + session.userData.startup + 
+                     " your startup is " + session.userData.startup + 
                      " and you're currently using " + session.userData.language + ".");
 
         session.endDialog();
@@ -196,9 +214,32 @@ bot.dialog('/bizspark', [
 ]);
 bot.dialog('/introductions', [
     function (session, args) {
-        builder.Prompts.text(session, "You asked about being introduced to someone. Is that correct?");
-    },
-    confirmIntent
+        console.log("Wants an introduction!");
+
+        session.text("I've logged this request and someone from the US Startups team will get back to you!");
+
+        var requestData = {
+                "Name": "Hooli",
+                "ContactName": "Peter Parker",
+                "ContactEmail": "peter@hooli.com",
+                "Category": "Documentation",
+                "Inquiry": "We would like to work with media services and video compression",
+                "Location": "Silicon Valley"
+                };
+
+        request.post({
+                headers: {'content-type' : 'application/json'},
+                url: 'http://startupconnector.azurewebsites.net/api/cards/',
+                json: true,
+                body: requestData,
+            }, 
+            function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    console.log(body)
+                }
+            }
+        );
+    }
 ]);
 bot.dialog('/rude', function (session, args) {
     session.endDialog("Well, you're just being rude.");
@@ -230,6 +271,7 @@ bot.dialog('/firstRun', [
 ]);
 
 function confirmIntent (session, results) {
+    console.log("confirmation attempt")
     if (results.response.toLowerCase() == 'y' || results.response.toLowerCase() == 'yes') {
         builder.Prompts.text("Ok, I'm getting the hang of things.");
     } else {
