@@ -115,7 +115,7 @@ bot.dialog('/officehours', [
                 "Topic": session.dialogData.officeHoursTopic,
                 "ReqestorFirstName": firstName,
                 "ReqestorLastName": lastName,
-                "ReqestorEmailAddress": "akelani@gmail.com",
+                "ReqestorEmailAddress": session.userData.email,
                 "RequestedConversation": session.dialogData.officeHoursTopic,
                 "RequestedDayHalf": session.dialogData.officeHoursTime,
                 "IsTest": "true"
