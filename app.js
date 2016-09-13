@@ -114,8 +114,8 @@ bot.dialog('/officehours', [
             // TODO: fill in first name, last name and email
             var requestData = {
                 "Topic": session.dialogData.officeHoursTopic,
-                "ReqestorFirstName": "Anthony" , //session.userData.firstName
-                "ReqestorLastName": "Kelani", //session.userData.lastName
+                "ReqestorFirstName": firstName , //session.userData.firstName
+                "ReqestorLastName": lastName, //session.userData.lastName
                 "ReqestorEmailAddress": "akelani@gmail.com", //session.userData.email
                 "RequestedConversation": "Office Hours Request",
                 "RequestedDayHalf": session.dialogData.officeHoursTime,
