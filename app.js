@@ -43,6 +43,7 @@ server.get('/', restify.serveStatic({
 var model = nconf.get("LUIS_model_URL");
 var recognizer = new builder.LuisRecognizer(model);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] });
+var resultTopics;
 
 bot.dialog('/', intents);
 
@@ -94,30 +95,26 @@ bot.dialog('/officehours', [
             session.endDialog("Darn. Ok, I've logged this for review.");
         }
     }, function (session, results, next) {
-        // TODO: check of response is in topics array
-        if(results.response) {
+        if(results.response && resultTopics.indexOf(results.response.entity) !== -1) {
             session.dialogData.officeHoursTopic = results.response.entity;
             builder.Prompts.choice(session, "When would you like to schedule your office hour?", ["Morning", "Afternoon"]);
         } else {
-
+            session.send("Umm...huh?");
         }
     }, function (session, results, next) {
-        // TODO: check of response is morning or afternoon
-        if(results.response) {
+        if(results.response && ["Morning", "Afternoon"].indexOf(results.response.entity) !== -1) {
             session.dialogData.officeHoursTime = results.response.entity;
             var firstName = session.userData.name.split(" ")[0];
             var lastName = session.userData.name.split(" ")[1];
 
             console.log("Making meeting request...");
 
-            // TODO: check for required information (topic, first/last name, email, time)
-            // TODO: fill in first name, last name and email
             var requestData = {
                 "Topic": session.dialogData.officeHoursTopic,
-                "ReqestorFirstName": firstName , //session.userData.firstName
-                "ReqestorLastName": lastName, //session.userData.lastName
-                "ReqestorEmailAddress": "akelani@gmail.com", //session.userData.email
-                "RequestedConversation": "Office Hours Request",
+                "ReqestorFirstName": firstName,
+                "ReqestorLastName": lastName,
+                "ReqestorEmailAddress": "akelani@gmail.com",
+                "RequestedConversation": session.dialogData.officeHoursTopic,
                 "RequestedDayHalf": session.dialogData.officeHoursTime,
                 "IsTest": "true"
             };
@@ -140,7 +137,7 @@ bot.dialog('/officehours', [
                 }
             });
         } else {
-
+            session.send("Umm...huh?");
         }
     }
 ]);
