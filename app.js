@@ -83,7 +83,36 @@ bot.dialog('/documentation', [
     function (session, args) {
         builder.Prompts.text(session, "You asked about Documentation. Is that correct?");
     },
-    confirmIntent
+    confirmIntent,
+    function (session, args) {
+        // call to https://directline.botframework.com/api/conversations
+    }
+]);
+bot.dialog('/profile', [
+    function (session, args) {
+        session.send("I'd like to ask some questions to learn more about you and your startup.");
+        builder.Prompts.text(session, "First, what's your name?");
+    },
+    function (session, results) {
+        session.userData.name = results.response;
+        builder.Prompts.text(session, "Hi " + results.response + ", What's the name of your startup?"); 
+    },
+    function (session, results) {
+        session.userData.startup = results.response;
+        builder.Prompts.choice(session, "What's your primary coding language?", [".NET", "Node.js", "Ruby on Rails", "PHP", "Java"]);
+    },
+    function (session, results) {
+        session.userData.startup = results.response;
+        builder.Prompts.choice(session, "What data store do you primarily use?", ["SQL Database", "Postgres", "MySQL", "Oracle", "MongoDB"]);
+    },
+    function (session, results) {
+        session.userData.language = results.response.entity;
+        session.send("Got it... " + session.userData.name + 
+                     " you're startup is " + session.userData.startup + 
+                     " and you're currently using " + session.userData.language + ".");
+
+        session.endDialog();
+    }
 ]);
 bot.dialog('/rude', function (session, args) {
     session.endDialog("Well, you're just being rude.");
@@ -103,19 +132,20 @@ bot.dialog('/didnotunderstand', [
 bot.use(builder.Middleware.firstRun({ version: 1.0, dialogId: '*:/firstRun' }));
 bot.dialog('/firstRun', [
     function (session) {
-        builder.Prompts.text(session, "Hello... What's your name?");
+        session.send("Hello... I'm the Microsoft Startup Bot.");
+        
+        if (!session.userData.name) {
+            session.beginDialog('/profile');
+        }
     },
-    function (session, results) {
-        // We'll save the users name and send them an initial greeting. All 
-        // future messages from the user will be routed to the root dialog.
-        session.userData.name = results.response;
-        session.endDialog("Hi %s, ask me a startup question and I'll try to correctly map it to an intent.", session.userData.name); 
+    function (session) {
+        session.endDialog("Ask me a startup question and I'll try to correctly map it to an intent."); 
     }
 ]);
 
 function confirmIntent (session, results) {
     if (results.response.toLowerCase() == 'y' || results.response.toLowerCase() == 'yes') {
-        session.endDialog("Ok, I'm getting the hang of things.");
+        builder.Prompts.text("Ok, I'm getting the hang of things.");
     } else {
         session.endDialog("Darn. Ok, I've logged this for review.");
     }          
